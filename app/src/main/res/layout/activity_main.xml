@@ -7,13 +7,13 @@
 
         <variable
             name="viewModel"
-            type="com.strange.coder.news.ui.MainViewModel" />
+            type="com.strange.coder.news.ui.viewmodel.MainViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.MainActivity">
+        tools:context=".ui.NewsActivity">
 
         <androidx.core.widget.ContentLoadingProgressBar
             android:id="@+id/progressBar"
@@ -22,11 +22,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="visible"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/newsList"
@@ -34,7 +34,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:orientation="vertical"
-            android:paddingBottom="50dp"
+            android:paddingBottom="16dp"
             android:visibility="visible"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"

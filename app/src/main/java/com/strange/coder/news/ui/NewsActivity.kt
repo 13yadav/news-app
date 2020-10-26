@@ -1,37 +1,35 @@
 package com.strange.coder.news.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.AbsListView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.strange.coder.news.Injection
 import com.strange.coder.news.R
-import com.strange.coder.news.databinding.SearchActivityBinding
+import com.strange.coder.news.databinding.ActivityMainBinding
 import com.strange.coder.news.ui.adapter.NewsAdapter
 import com.strange.coder.news.ui.viewmodel.MainViewModel
-import com.strange.coder.news.util.Constants
+import com.strange.coder.news.util.Constants.Companion.QUERY_PAGE_SIZE
 import com.strange.coder.news.util.Resource
-import kotlinx.android.synthetic.main.search_activity.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.android.synthetic.main.activity_main.*
 
-class SearchActivity : AppCompatActivity() {
+class NewsActivity : AppCompatActivity() {
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var searchNewsAdapter: NewsAdapter
+    private lateinit var topNewsAdapter: NewsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding: SearchActivityBinding =
-            DataBindingUtil.setContentView(this, R.layout.search_activity)
+        val binding: ActivityMainBinding =
+            DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         binding.lifecycleOwner = this
 
@@ -40,42 +38,28 @@ class SearchActivity : AppCompatActivity() {
 
         binding.viewModel = viewModel
 
-        var job: Job? = null
-        binding.searchText.addTextChangedListener { editableQuery ->
-            job?.cancel()
-            hideProgressBar()
-            job = MainScope().launch {
-                delay(500L)
-                editableQuery?.let {
-                    if (editableQuery.toString().isNotEmpty()) {
-                        viewModel.searchNews(editableQuery.toString())
-                        showProgressBar()
-                    }
-                }
-            }
+        // setup recyclerView
+        topNewsAdapter = Injection.provideNewsAdapter(this, viewModel)
+        binding.newsList.apply {
+            adapter = topNewsAdapter
+            addOnScrollListener(this@NewsActivity.scrollListener)
         }
 
-        searchNewsAdapter = Injection.provideNewsAdapter(this, viewModel)
-        binding.searchResultList.apply {
-            adapter = searchNewsAdapter
-            addOnScrollListener(this@SearchActivity.scrollListener)
-        }
-
-        viewModel.searchNews.observe(this, { response ->
+        viewModel.breakingNews.observe(this, { response ->
             when (response) {
                 is Resource.Success -> {
                     hideProgressBar()
                     response.data?.let { newsResponse ->
                         Log.d("JJJ", "${newsResponse.totalResults}")
-                        searchNewsAdapter.submitList(newsResponse.articles.toList())
-                        val totalPages = newsResponse.totalResults / Constants.QUERY_PAGE_SIZE + 2
-                        isLastPage = viewModel.searchNewsPage == totalPages
+                        topNewsAdapter.submitList(newsResponse.articles.toList())
+                        val totalPages = newsResponse.totalResults / QUERY_PAGE_SIZE + 2
+                        isLastPage = viewModel.breakingNewsPage == totalPages
                     }
                 }
                 is Resource.Error -> {
                     hideProgressBar()
                     response.message?.let {
-                        searchErrorView.visibility = View.VISIBLE
+                        errorView.visibility = View.VISIBLE
                     }
                 }
                 is Resource.Loading -> {
@@ -84,16 +68,14 @@ class SearchActivity : AppCompatActivity() {
             }
         })
 
-    }
+        viewModel.errorResponse.observe(this, { errorResponse ->
+            if (errorResponse) {
+                progressBar.visibility = View.GONE
+                errorView.visibility = View.VISIBLE
+                newsList.visibility = View.GONE
+            }
+        })
 
-    private fun showProgressBar() {
-        searchProgressBar.visibility = View.VISIBLE
-        isLoading = true
-    }
-
-    private fun hideProgressBar() {
-        searchProgressBar.visibility = View.GONE
-        isLoading = false
     }
 
     /***
@@ -122,14 +104,43 @@ class SearchActivity : AppCompatActivity() {
             val isNotLoadingAndNotLastPage = !isLoading && !isLastPage
             val isAtLastItem = firstVisibleItemPosition + visibleItemCount >= totalItemCount
             val isNotAtBeginning = firstVisibleItemPosition >= 0
-            val isTotalMoreThanVisible = totalItemCount >= Constants.QUERY_PAGE_SIZE
+            val isTotalMoreThanVisible = totalItemCount >= QUERY_PAGE_SIZE
             val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
                     isTotalMoreThanVisible && isScrolling
             if (shouldPaginate) {
-                viewModel.searchNews(searchText.text.toString())
+                viewModel.getTopNews()
                 isScrolling = false
             }
         }
     }
 
+
+    private fun hideProgressBar() {
+        progressBar.visibility = View.GONE
+        isLoading = false
+    }
+
+    private fun showProgressBar() {
+        progressBar.visibility = View.VISIBLE
+        isLoading = true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.searchAction -> {
+                startActivity(Intent(this, SearchActivity::class.java))
+                true
+            }
+            R.id.savedAction -> {
+                startActivity(Intent(this, SavedNewsActivity::class.java))
+                true
+            }
+            else -> super.onContextItemSelected(item)
+        }
+    }
 }

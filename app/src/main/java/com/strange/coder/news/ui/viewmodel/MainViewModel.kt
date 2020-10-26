@@ -1,4 +1,4 @@
-package com.strange.coder.news.ui
+package com.strange.coder.news.ui.viewmodel
 
 import androidx.lifecycle.*
 import com.example.geet_themusic.network.util.NetworkHelper
@@ -36,9 +36,10 @@ class MainViewModel(
     val breakingNews: LiveData<Resource<NewsResponse>>
         get() = _breakingNews
 
-    val breakingNewsPage = 1
+    var breakingNewsPage = 1
+    var breakingNewsResponse: NewsResponse? = null
 
-    private fun getTopNews() = viewModelScope.launch {
+    fun getTopNews() = viewModelScope.launch {
 //        _breakingNews.postValue(Resource.Loading())
         val response = newsRepository.getTopNews(breakingNewsPage)
         _breakingNews.postValue(handleBreakingNewsResponse(response))
@@ -46,8 +47,16 @@ class MainViewModel(
 
     private fun handleBreakingNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
         if (response.isSuccessful) {
-            response.body()?.let { newsResponse ->
-                return Resource.Success(newsResponse)
+            response.body()?.let { resultResponse ->
+                breakingNewsPage++
+                if (breakingNewsResponse == null) {
+                    breakingNewsResponse = resultResponse
+                } else {
+                    val oldArticles = breakingNewsResponse?.articles
+                    val newArticles = resultResponse.articles
+                    oldArticles?.addAll(newArticles)
+                }
+                return Resource.Success(breakingNewsResponse ?: resultResponse)
             }
         }
         return Resource.Error(response.message())
@@ -59,7 +68,8 @@ class MainViewModel(
     private val _searchNews = MutableLiveData<Resource<NewsResponse>>()
     val searchNews: LiveData<Resource<NewsResponse>>
         get() = _searchNews
-    val searchNewsPage = 1
+    var searchNewsPage = 1
+    var searchNewsResponse: NewsResponse? = null
 
 
     fun searchNews(searchQuery: String) =
@@ -71,8 +81,16 @@ class MainViewModel(
 
     private fun handleSearchNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
         if (response.isSuccessful) {
-            response.body()?.let { newsResponse ->
-                return Resource.Success(newsResponse)
+            response.body()?.let { resultResponse ->
+                searchNewsPage++
+                if (searchNewsResponse == null) {
+                    searchNewsResponse = resultResponse
+                } else {
+                    val oldArticles = searchNewsResponse?.articles
+                    val newArticles = resultResponse.articles
+                    oldArticles?.addAll(newArticles)
+                }
+                return Resource.Success(searchNewsResponse ?: resultResponse)
             }
         }
         return Resource.Error(response.message())

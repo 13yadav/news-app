@@ -1,18 +1,26 @@
-package com.strange.coder.news.ui
+package com.strange.coder.news.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
+import com.strange.coder.news.R
 import com.strange.coder.news.data.model.Article
 import com.strange.coder.news.databinding.NewsListItemBinding
 
-class NewsAdapter(private val onItemClickListener: OnItemClickListener) :
-    ListAdapter<Article, NewsAdapter.ViewHolder>(NewsItemDiffCallback()) {
+class NewsAdapter(
+    private val onItemClickListener: OnItemClickListener,
+    private var onSaveClicked: (Article) -> Unit
+) : ListAdapter<Article, NewsAdapter.ViewHolder>(NewsItemDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder.from(parent)
+        return ViewHolder(
+            NewsListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+            onSaveClicked
+        )
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -23,23 +31,27 @@ class NewsAdapter(private val onItemClickListener: OnItemClickListener) :
         holder.bind(article)
     }
 
-    class ViewHolder private constructor(private val binding: NewsListItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    /**
+     * ViewHolder for NewsItems
+     * **/
+    class ViewHolder(
+        private val binding: NewsListItemBinding,
+        private var onSaveClicked: (Article) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: Article) {
-            binding.article = item
-            binding.executePendingBindings()
-        }
-
-        companion object {
-            fun from(parent: ViewGroup): ViewHolder {
-                val layoutInflater = LayoutInflater.from(parent.context)
-                val binding = NewsListItemBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder(binding)
+        fun bind(article: Article) {
+            binding.article = article
+            binding.saveButton.setOnClickListener { view ->
+                onSaveClicked(article)
+                Snackbar.make(view, "Article saved successfully", Snackbar.LENGTH_SHORT).show()
             }
+            binding.executePendingBindings()
         }
     }
 
+    /**
+     * ClickListener class for NewsItems
+     * **/
     class OnItemClickListener(val clickListener: (article: Article) -> Unit) {
         fun onClick(article: Article) = clickListener(article)
     }
