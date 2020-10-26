@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">News</string>
+    <string name="error_msg">Oops! Something went wrong</string>
+    <string name="no_internet">Oops! Please check your internet connection.</string>
+    <string name="ipsum_text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</string>
+    <string name="latestNews">Latest News</string>
+    <string name="search">Search</string>
+    <string name="saved_news">Saved News</string>
+</resources>
