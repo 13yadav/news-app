@@ -1,7 +1,6 @@
 package com.strange.coder.news.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.AbsListView
 import androidx.appcompat.app.AppCompatActivity
@@ -26,7 +25,10 @@ import kotlinx.coroutines.launch
 class SearchActivity : AppCompatActivity() {
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var searchNewsAdapter: NewsAdapter
+
+    private val searchNewsAdapter: NewsAdapter by lazy {
+        Injection.provideNewsAdapter(this, viewModel)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,25 +39,24 @@ class SearchActivity : AppCompatActivity() {
 
         val viewModelFactory = Injection.provideViewModelFactory(this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-
         binding.viewModel = viewModel
 
         var job: Job? = null
         binding.searchText.addTextChangedListener { editableQuery ->
             job?.cancel()
             hideProgressBar()
+            hideNetworkError()
             job = MainScope().launch {
                 delay(500L)
                 editableQuery?.let {
                     if (editableQuery.toString().isNotEmpty()) {
-                        viewModel.searchNews(editableQuery.toString())
                         showProgressBar()
+                        viewModel.searchNews(editableQuery.toString())
                     }
                 }
             }
         }
 
-        searchNewsAdapter = Injection.provideNewsAdapter(this, viewModel)
         binding.searchResultList.apply {
             adapter = searchNewsAdapter
             addOnScrollListener(this@SearchActivity.scrollListener)
@@ -65,8 +66,8 @@ class SearchActivity : AppCompatActivity() {
             when (response) {
                 is Resource.Success -> {
                     hideProgressBar()
+                    hideNetworkError()
                     response.data?.let { newsResponse ->
-                        Log.d("JJJ", "${newsResponse.totalResults}")
                         searchNewsAdapter.submitList(newsResponse.articles.toList())
                         val totalPages = newsResponse.totalResults / Constants.QUERY_PAGE_SIZE + 2
                         isLastPage = viewModel.searchNewsPage == totalPages
@@ -75,15 +76,24 @@ class SearchActivity : AppCompatActivity() {
                 is Resource.Error -> {
                     hideProgressBar()
                     response.message?.let {
-                        searchErrorView.visibility = View.VISIBLE
+                        showNetworkError()
                     }
                 }
                 is Resource.Loading -> {
                     showProgressBar()
+                    hideNetworkError()
                 }
             }
         })
 
+    }
+
+    private fun showNetworkError() {
+        searchErrorView.visibility = View.VISIBLE
+    }
+
+    private fun hideNetworkError() {
+        searchErrorView.visibility = View.GONE
     }
 
     private fun showProgressBar() {
@@ -103,7 +113,7 @@ class SearchActivity : AppCompatActivity() {
     var isLastPage = false
     var isScrolling = false
 
-    val scrollListener = object : RecyclerView.OnScrollListener() {
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {

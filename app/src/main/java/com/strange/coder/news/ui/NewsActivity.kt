@@ -2,7 +2,6 @@ package com.strange.coder.news.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -35,7 +34,6 @@ class NewsActivity : AppCompatActivity() {
 
         val viewModelFactory = Injection.provideViewModelFactory(this)
         viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-
         binding.viewModel = viewModel
 
         // setup recyclerView
@@ -49,8 +47,8 @@ class NewsActivity : AppCompatActivity() {
             when (response) {
                 is Resource.Success -> {
                     hideProgressBar()
+                    hideNetworkError()
                     response.data?.let { newsResponse ->
-                        Log.d("JJJ", "${newsResponse.totalResults}")
                         topNewsAdapter.submitList(newsResponse.articles.toList())
                         val totalPages = newsResponse.totalResults / QUERY_PAGE_SIZE + 2
                         isLastPage = viewModel.breakingNewsPage == totalPages
@@ -59,19 +57,20 @@ class NewsActivity : AppCompatActivity() {
                 is Resource.Error -> {
                     hideProgressBar()
                     response.message?.let {
-                        errorView.visibility = View.VISIBLE
+                        showNetworkError()
                     }
                 }
                 is Resource.Loading -> {
                     showProgressBar()
+                    hideNetworkError()
                 }
             }
         })
 
         viewModel.errorResponse.observe(this, { errorResponse ->
             if (errorResponse) {
-                progressBar.visibility = View.GONE
-                errorView.visibility = View.VISIBLE
+                hideProgressBar()
+                showNetworkError()
                 newsList.visibility = View.GONE
             }
         })
@@ -85,7 +84,7 @@ class NewsActivity : AppCompatActivity() {
     var isLastPage = false
     var isScrolling = false
 
-    val scrollListener = object : RecyclerView.OnScrollListener() {
+    private val scrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
@@ -125,6 +124,17 @@ class NewsActivity : AppCompatActivity() {
         isLoading = true
     }
 
+    private fun showNetworkError() {
+        errorView.visibility = View.VISIBLE
+    }
+
+    private fun hideNetworkError() {
+        errorView.visibility = View.GONE
+    }
+
+    /***
+     * Menu Inflation
+     * **/
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
