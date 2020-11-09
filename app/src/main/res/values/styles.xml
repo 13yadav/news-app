@@ -17,6 +17,11 @@
 
     </style>
 
+    <style name="splashScreen" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+    </style>
+
     <style name="Theme.News.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

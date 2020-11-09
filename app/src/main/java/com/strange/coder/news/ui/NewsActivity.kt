@@ -26,6 +26,7 @@ class NewsActivity : AppCompatActivity() {
     private lateinit var topNewsAdapter: NewsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_News)
         super.onCreate(savedInstanceState)
         val binding: ActivityMainBinding =
             DataBindingUtil.setContentView(this, R.layout.activity_main)

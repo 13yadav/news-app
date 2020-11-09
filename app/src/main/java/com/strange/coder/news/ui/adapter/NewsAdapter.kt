@@ -2,12 +2,10 @@ package com.strange.coder.news.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.graphics.drawable.toDrawable
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import com.strange.coder.news.R
 import com.strange.coder.news.data.model.Article
 import com.strange.coder.news.databinding.NewsListItemBinding
 
@@ -59,11 +57,11 @@ class NewsAdapter(
 
 class NewsItemDiffCallback : DiffUtil.ItemCallback<Article>() {
     override fun areItemsTheSame(oldItem: Article, newItem: Article): Boolean {
-        return oldItem.url == newItem.url
+        return oldItem.url == newItem.url && oldItem.title == newItem.title
     }
 
     override fun areContentsTheSame(oldItem: Article, newItem: Article): Boolean {
-        return oldItem == newItem
+        return oldItem == newItem && oldItem.title == newItem.title
     }
 }
 

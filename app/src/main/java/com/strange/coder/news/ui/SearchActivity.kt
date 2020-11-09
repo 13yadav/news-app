@@ -1,6 +1,7 @@
 package com.strange.coder.news.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AbsListView
 import androidx.appcompat.app.AppCompatActivity
@@ -69,6 +70,7 @@ class SearchActivity : AppCompatActivity() {
                     hideNetworkError()
                     response.data?.let { newsResponse ->
                         searchNewsAdapter.submitList(newsResponse.articles.toList())
+                        Log.d("JJJ", "Search Result: ${newsResponse.articles.toString()}")
                         val totalPages = newsResponse.totalResults / Constants.QUERY_PAGE_SIZE + 2
                         isLastPage = viewModel.searchNewsPage == totalPages
                     }
