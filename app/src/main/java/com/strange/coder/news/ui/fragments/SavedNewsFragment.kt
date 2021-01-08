@@ -1,40 +1,44 @@
-package com.strange.coder.news.ui
+package com.strange.coder.news.ui.fragments
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.strange.coder.news.Injection
+import com.strange.coder.news.MainActivity
 import com.strange.coder.news.R
-import com.strange.coder.news.databinding.SavedNewsActivityBinding
+import com.strange.coder.news.databinding.FragmentSavedNewsBinding
 import com.strange.coder.news.ui.adapter.NewsAdapter
 import com.strange.coder.news.ui.viewmodel.MainViewModel
-import kotlinx.android.synthetic.main.saved_news_activity.*
 
-class SavedNewsActivity : AppCompatActivity() {
+class SavedNewsFragment : Fragment() {
+    private lateinit var binding: FragmentSavedNewsBinding
 
     private lateinit var viewModel: MainViewModel
     private lateinit var savedNewsAdapter: NewsAdapter
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.Theme_News)
-        super.onCreate(savedInstanceState)
-        val binding: SavedNewsActivityBinding =
-            DataBindingUtil.setContentView(this, R.layout.saved_news_activity)
-
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_saved_news, container, false)
         binding.lifecycleOwner = this
+        viewModel = (activity as MainActivity).viewModel
+        return binding.root
+    }
 
-        val viewModelFactory = Injection.provideViewModelFactory(this)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-
-        binding.viewModel = viewModel
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // setup recyclerView
-        savedNewsAdapter = Injection.provideNewsAdapter(this, viewModel)
+        savedNewsAdapter = Injection.provideNewsAdapter(requireContext(), viewModel)
         binding.savedList.adapter = savedNewsAdapter
 
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
@@ -67,12 +71,11 @@ class SavedNewsActivity : AppCompatActivity() {
         }
 
         ItemTouchHelper(itemTouchHelperCallback).apply {
-            attachToRecyclerView(savedList)
+            attachToRecyclerView(binding.savedList)
         }
 
         viewModel.getSavedNews().observe(this, Observer {
             savedNewsAdapter.submitList(it)
         })
-
     }
 }

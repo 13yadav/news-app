@@ -1,78 +1,60 @@
-package com.strange.coder.news.ui
+package com.strange.coder.news.ui.fragments
 
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import android.view.*
 import android.widget.AbsListView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.strange.coder.news.Injection
+import com.strange.coder.news.MainActivity
 import com.strange.coder.news.R
-import com.strange.coder.news.databinding.SearchActivityBinding
+import com.strange.coder.news.databinding.FragmentNewsBinding
 import com.strange.coder.news.ui.adapter.NewsAdapter
 import com.strange.coder.news.ui.viewmodel.MainViewModel
 import com.strange.coder.news.util.Constants
 import com.strange.coder.news.util.Resource
-import kotlinx.android.synthetic.main.search_activity.*
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-class SearchActivity : AppCompatActivity() {
+class NewsFragment : Fragment() {
+
+    private lateinit var binding: FragmentNewsBinding
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var topNewsAdapter: NewsAdapter
 
-    private val searchNewsAdapter: NewsAdapter by lazy {
-        Injection.provideNewsAdapter(this, viewModel)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_news, container, false)
+        binding.lifecycleOwner = this
+        setHasOptionsMenu(true)
+        viewModel = (activity as MainActivity).viewModel
+        return binding.root
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val binding: SearchActivityBinding =
-            DataBindingUtil.setContentView(this, R.layout.search_activity)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        binding.lifecycleOwner = this
-
-        val viewModelFactory = Injection.provideViewModelFactory(this)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-        binding.viewModel = viewModel
-
-        var job: Job? = null
-        binding.searchText.addTextChangedListener { editableQuery ->
-            job?.cancel()
-            hideProgressBar()
-            hideNetworkError()
-            job = MainScope().launch {
-                delay(500L)
-                editableQuery?.let {
-                    if (editableQuery.toString().isNotEmpty()) {
-                        showProgressBar()
-                        viewModel.searchNews(editableQuery.toString())
-                    }
-                }
-            }
+        // setup recyclerView
+        topNewsAdapter = Injection.provideNewsAdapter(requireContext(), viewModel)
+        binding.newsList.apply {
+            adapter = topNewsAdapter
+            addOnScrollListener(this@NewsFragment.scrollListener)
         }
 
-        binding.searchResultList.apply {
-            adapter = searchNewsAdapter
-            addOnScrollListener(this@SearchActivity.scrollListener)
-        }
-
-        viewModel.searchNews.observe(this, { response ->
+        viewModel.breakingNews.observe(viewLifecycleOwner, { response ->
             when (response) {
                 is Resource.Success -> {
                     hideProgressBar()
                     hideNetworkError()
                     response.data?.let { newsResponse ->
-                        searchNewsAdapter.submitList(newsResponse.articles.toList())
-                        Log.d("JJJ", "Search Result: ${newsResponse.articles.toString()}")
+                        topNewsAdapter.submitList(newsResponse.articles.toList())
                         val totalPages = newsResponse.totalResults / Constants.QUERY_PAGE_SIZE + 2
-                        isLastPage = viewModel.searchNewsPage == totalPages
+                        isLastPage = viewModel.breakingNewsPage == totalPages
                     }
                 }
                 is Resource.Error -> {
@@ -88,24 +70,13 @@ class SearchActivity : AppCompatActivity() {
             }
         })
 
-    }
-
-    private fun showNetworkError() {
-        searchErrorView.visibility = View.VISIBLE
-    }
-
-    private fun hideNetworkError() {
-        searchErrorView.visibility = View.GONE
-    }
-
-    private fun showProgressBar() {
-        searchProgressBar.visibility = View.VISIBLE
-        isLoading = true
-    }
-
-    private fun hideProgressBar() {
-        searchProgressBar.visibility = View.GONE
-        isLoading = false
+        viewModel.errorResponse.observe(viewLifecycleOwner, { errorResponse ->
+            if (errorResponse) {
+                hideProgressBar()
+                showNetworkError()
+                binding.newsList.visibility = View.GONE
+            }
+        })
     }
 
     /***
@@ -138,9 +109,46 @@ class SearchActivity : AppCompatActivity() {
             val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
                     isTotalMoreThanVisible && isScrolling
             if (shouldPaginate) {
-                viewModel.searchNews(searchText.text.toString())
+                viewModel.getTopNews()
                 isScrolling = false
             }
+        }
+    }
+
+
+    private fun hideProgressBar() {
+        binding.progressBar.visibility = View.GONE
+        isLoading = false
+    }
+
+    private fun showProgressBar() {
+        binding.progressBar.visibility = View.VISIBLE
+        isLoading = true
+    }
+
+    private fun showNetworkError() {
+        binding.errorView.visibility = View.VISIBLE
+    }
+
+    private fun hideNetworkError() {
+        binding.errorView.visibility = View.GONE
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_main, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.searchAction -> {
+//                findNavController().navigate(NewsFragmentDirections.)
+                true
+            }
+            R.id.savedAction -> {
+
+                true
+            }
+            else -> super.onContextItemSelected(item)
         }
     }
 
