@@ -8,7 +8,6 @@ import com.strange.coder.news.repo.NewsRepository
 import com.strange.coder.news.util.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Response
 
 
 class MainViewModel(
@@ -20,86 +19,29 @@ class MainViewModel(
     val errorResponse: LiveData<Boolean>
         get() = _errorResponse
 
-    init {
-        if (networkHelper.isNetworkConnected()) {
-            getTopNews()
-            _errorResponse.value = false
-        } else {
-            _errorResponse.value = true
+    fun getTopHeadlines() = liveData(Dispatchers.IO) {
+        emit(Resource.loading(data = null))
+        try {
+            emit(Resource.success(data = newsRepository.getTopHeadlines(1)))
+        } catch (e: Exception) {
+            emit(Resource.error(data = null, message = e.message ?: "Error Occurred"))
         }
     }
 
-    /**
-     * Breaking News
-     **/
-    private val _breakingNews = MutableLiveData<Resource<NewsResponse>>()
-    val breakingNews: LiveData<Resource<NewsResponse>>
-        get() = _breakingNews
+    private val _searchResults = MutableLiveData<Resource<NewsResponse>>()
+    val searchResults: LiveData<Resource<NewsResponse>>
+        get() = _searchResults
 
-    var breakingNewsPage = 1
-    var breakingNewsResponse: NewsResponse? = null
-
-    fun getTopNews() = viewModelScope.launch {
-//        _breakingNews.postValue(Resource.Loading())
-        val response = newsRepository.getTopNews(breakingNewsPage)
-        _breakingNews.postValue(handleBreakingNewsResponse(response))
-    }
-
-    private fun handleBreakingNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
-        if (response.isSuccessful) {
-            response.body()?.let { resultResponse ->
-                breakingNewsPage++
-                if (breakingNewsResponse == null) {
-                    breakingNewsResponse = resultResponse
-                } else {
-                    val oldArticles = breakingNewsResponse?.articles
-                    val newArticles = resultResponse.articles
-                    oldArticles?.addAll(newArticles)
-                }
-                return Resource.Success(breakingNewsResponse ?: resultResponse)
-            }
+    fun getSearchResults(searchQuery: String) = viewModelScope.launch() {
+        _searchResults.value = Resource.loading(data = null)
+        try {
+            _searchResults.postValue(
+                Resource.success(data = newsRepository.searchNews(searchQuery, 1))
+            )
+        } catch (e: Exception) {
+            _searchResults.value = Resource.error(data = null, message = e.message ?: "Error Occurred")
         }
-        return Resource.Error(response.message())
     }
-
-    /**
-     * Search News
-     **/
-    private val _searchNews = MutableLiveData<Resource<NewsResponse>>()
-    val searchNews: LiveData<Resource<NewsResponse>>
-        get() = _searchNews
-    var searchNewsPage = 1
-    var searchNewsResponse: NewsResponse? = null
-
-
-    fun searchNews(searchQuery: String) =
-        viewModelScope.launch() {
-//            _searchNews.postValue(Resource.Loading())
-            val response = newsRepository.searchNews(searchQuery, searchNewsPage)
-            _searchNews.postValue(handleSearchNewsResponse(response))
-        }
-
-    private fun handleSearchNewsResponse(response: Response<NewsResponse>): Resource<NewsResponse> {
-        if (response.isSuccessful) {
-            response.body()?.let { resultResponse ->
-                searchNewsPage++
-                if (searchNewsResponse == null) {
-                    searchNewsResponse = resultResponse
-                } else {
-                    val oldArticles = searchNewsResponse?.articles
-                    val newArticles = resultResponse.articles
-                    oldArticles?.addAll(newArticles)
-                }
-                return Resource.Success(searchNewsResponse ?: resultResponse)
-            }
-        }
-        return Resource.Error(response.message())
-    }
-
-
-    /**
-     * Saving an deleting articles
-     * ***/
 
     fun saveArticle(article: Article) = viewModelScope.launch(Dispatchers.IO) {
         newsRepository.upsert(article)

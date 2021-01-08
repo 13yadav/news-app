@@ -5,7 +5,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object NewsApiService {
+object RetrofitService {
     private const val BASE_URL = "https://newsapi.org/"
 
     private val client = OkHttpClient.Builder().build()

@@ -11,17 +11,17 @@
         android:label="News"
         tools:layout="@layout/fragment_news" >
         <action
-            android:id="@+id/action_newsFragment_to_searchFragment2"
+            android:id="@+id/action_newsFragment_to_searchFragment"
             app:destination="@id/searchFragment" />
         <action
-            android:id="@+id/action_newsFragment_to_savedNewsFragment2"
+            android:id="@+id/action_newsFragment_to_savedNewsFragment"
             app:destination="@id/savedNewsFragment" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"
-        android:name="com.strange.coder.news.ui.fragments.SearchFragment"
+        android:name="com.strange.coder.news.ui.fragments.SearchNewsFragment"
         android:label="Search"
-        tools:layout="@layout/fragment_search" />
+        tools:layout="@layout/fragment_search_news" />
     <fragment
         android:id="@+id/savedNewsFragment"
         android:name="com.strange.coder.news.ui.fragments.SavedNewsFragment"

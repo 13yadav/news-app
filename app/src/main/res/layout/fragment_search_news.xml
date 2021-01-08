@@ -17,9 +17,9 @@
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/searchCard"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="40dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             app:cardCornerRadius="8dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -35,11 +35,10 @@
                 android:layout_marginEnd="8dp"
                 android:background="@android:color/transparent"
                 android:drawableStart="@drawable/ic_search"
-                android:drawablePadding="8dp"
-                android:padding="16dp"
+                android:drawablePadding="4dp"
+                android:hint="@string/search"
                 android:singleLine="true"
-                app:drawableTint="@color/grey"
-                tools:text="Corona Virus" />
+                app:drawableTint="@color/grey" />
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -48,14 +47,15 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:clipToPadding="false"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:orientation="vertical"
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/searchCard"
-            app:layout_constraintBottom_toBottomOf="parent"
             tools:listitem="@layout/news_list_item"
             tools:visibility="visible" />
 

@@ -2,17 +2,18 @@ package com.strange.coder.news.repo
 
 import com.strange.coder.news.data.ArticleDatabase
 import com.strange.coder.news.data.model.Article
-import com.strange.coder.news.network.NewsApiService
+import com.strange.coder.news.network.NewsApi
+import com.strange.coder.news.network.RetrofitService
 
 class NewsRepository(
-    val db: ArticleDatabase
+    private val db: ArticleDatabase
 ) {
+    private val client = RetrofitService.retrofitService
 
-    suspend fun getTopNews(pageNumber: Int) =
-        NewsApiService.retrofitService.topHeadlines(pageNumber = pageNumber)
+    suspend fun getTopHeadlines(pageNumber: Int) = client.topHeadlines(pageNumber = pageNumber)
 
     suspend fun searchNews(searchQuery: String, pageNumber: Int) =
-        NewsApiService.retrofitService.searchNews(searchQuery, pageNumber)
+        client.searchNews(searchQuery = searchQuery, pageNumber = pageNumber)
 
     suspend fun upsert(article: Article) = db.articleDao.upsert(article)
 
