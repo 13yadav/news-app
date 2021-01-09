@@ -5,6 +5,7 @@ import android.view.*
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.transition.MaterialSharedAxis
 import com.strange.coder.news.Injection
 import com.strange.coder.news.MainActivity
 import com.strange.coder.news.R
@@ -64,14 +65,6 @@ class NewsFragment : Fragment() {
                 }
             }
         })
-
-        viewModel.errorResponse.observe(viewLifecycleOwner, { errorResponse ->
-            if (errorResponse) {
-                hideProgressBar()
-                showNetworkError()
-                binding.newsList.visibility = View.GONE
-            }
-        })
     }
 
     private fun hideProgressBar() {
@@ -97,10 +90,18 @@ class NewsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.searchAction -> {
+                this.apply {
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+                    reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+                }
                 findNavController().navigate(NewsFragmentDirections.actionNewsFragmentToSearchFragment())
                 true
             }
             R.id.savedAction -> {
+                this.apply {
+                    exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+                    reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+                }
                 findNavController().navigate(NewsFragmentDirections.actionNewsFragmentToSavedNewsFragment())
                 true
             }

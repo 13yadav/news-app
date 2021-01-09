@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.widget.addTextChangedListener
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import com.google.android.material.transition.MaterialSharedAxis
 import com.strange.coder.news.Injection
 import com.strange.coder.news.MainActivity
 import com.strange.coder.news.R
@@ -26,6 +27,12 @@ class SearchNewsFragment : Fragment() {
 
     private val searchNewsAdapter: NewsAdapter by lazy {
         Injection.provideNewsAdapter(requireContext(), viewModel)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
     }
 
     override fun onCreateView(

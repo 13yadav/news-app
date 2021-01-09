@@ -15,10 +15,6 @@ class MainViewModel(
     private val newsRepository: NewsRepository
 ) : ViewModel() {
 
-    private val _errorResponse = MutableLiveData<Boolean>()
-    val errorResponse: LiveData<Boolean>
-        get() = _errorResponse
-
     fun getTopHeadlines() = liveData(Dispatchers.IO) {
         emit(Resource.loading(data = null))
         try {

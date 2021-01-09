@@ -10,6 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.transition.MaterialSharedAxis
 import com.strange.coder.news.Injection
 import com.strange.coder.news.MainActivity
 import com.strange.coder.news.R
@@ -22,6 +23,12 @@ class SavedNewsFragment : Fragment() {
 
     private lateinit var viewModel: MainViewModel
     private lateinit var savedNewsAdapter: NewsAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true)
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,7 +81,7 @@ class SavedNewsFragment : Fragment() {
             attachToRecyclerView(binding.savedList)
         }
 
-        viewModel.getSavedNews().observe(this, Observer {
+        viewModel.getSavedNews().observe(viewLifecycleOwner, Observer {
             savedNewsAdapter.submitList(it)
         })
     }
